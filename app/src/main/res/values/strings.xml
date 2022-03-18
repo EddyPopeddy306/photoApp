@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">FotoApp</string>
+    <string name="tab_text_1">Foto aufnehmen</string>
+    <string name="tab_text_2">Vorschau</string>
+    <string name="tab_text_3">Fotoliste</string>
+
+    <string name="open_cam">Kamera öffnen</string>
+    <string name="enter_picture_name">Fototitel eingeben</string>
+    <string name="hint_picture_name">Fototitel</string>
+    <string name="save_button">Speichern</string>
+    <string name="picture_name">Fototitel</string>
+    <string name="save_image">Speichern</string>
+
+    <string name="no_pic">Noch kein Bild vorhanden</string>
+    <string name="date_pic">Aufgenommen am: </string>
+</resources>
