@@ -1,10 +1,15 @@
 package com.edwingross.fotoApp.Activities;
 
 import android.Manifest;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 
 import com.edwingross.fotoApp.R;
+import com.edwingross.fotoApp.Services.PhotoService;
 import com.edwingross.fotoApp.Util.Constants;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
@@ -15,6 +20,7 @@ import androidx.core.content.ContextCompat;
 import androidx.viewpager.widget.ViewPager;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -25,6 +31,9 @@ import com.edwingross.fotoApp.databinding.ActivityMainBinding;
 public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
+
+    PhotoService photoService;
+    boolean isBound = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,4 +59,55 @@ public class MainActivity extends AppCompatActivity {
             cameraButton.setText("Foto aufnehmen");
         }
     }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        //Bind to PhotoService
+        Intent intent = new Intent(this, PhotoService.class);
+        bindService(intent, connection, Context.BIND_AUTO_CREATE);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        //Bind to PhotoService
+        Intent intent = new Intent(this, PhotoService.class);
+        bindService(intent, connection, Context.BIND_AUTO_CREATE);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        //Unbind Service
+        unbindService(connection);
+        isBound = false;
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        //Unbind Service
+        unbindService(connection);
+        isBound = false;
+    }
+
+    /** Defines callbacks for service binding, passed to bindService() */
+    private ServiceConnection connection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName className,
+                                       IBinder service) {
+            // We've bound to LocalService, cast the IBinder and get LocalService instance
+            PhotoService.LocalBinder binder = (PhotoService.LocalBinder) service;
+            photoService = binder.getService();
+            isBound = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName arg0) {
+            isBound = false;
+        }
+    };
+
 }
