@@ -1,10 +1,13 @@
 package com.edwingross.fotoApp.Fragments;
 
 import android.app.AlertDialog;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -24,6 +27,7 @@ import com.edwingross.fotoApp.Activities.MainActivity;
 import com.edwingross.fotoApp.Database.DatabaseHandler;
 import com.edwingross.fotoApp.Model.PictureObject;
 import com.edwingross.fotoApp.R;
+import com.edwingross.fotoApp.Services.PhotoService;
 import com.edwingross.fotoApp.Util.Constants;
 
 import java.util.ArrayList;
@@ -31,6 +35,8 @@ import java.util.List;
 
 public class ImageViewFragment extends Fragment {
 
+    private PhotoService boundService;
+    private boolean isBound;
 
     private AlertDialog.Builder builder;
     private AlertDialog alertDialog;
@@ -46,6 +52,7 @@ public class ImageViewFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        doBindService();
         return inflater.inflate(R.layout.image_view_fragment_layout, container, false);
     }
 
@@ -87,16 +94,50 @@ public class ImageViewFragment extends Fragment {
     }
 
     private void saveImageToDB() {
-        db = new DatabaseHandler(getContext());
-        PhotoFragment.pictureObject.setName(photoTitle.getText().toString());
+        //db = new DatabaseHandler(getContext());
+        //PhotoFragment.pictureObject.setName(photoTitle.getText().toString());
+        boundService.getPictureObject().setName(photoTitle.getText().toString());
         //Image got set in capturePhoto() method
 
-        db.addPicture(PhotoFragment.pictureObject);
+        //db.addPicture(PhotoFragment.pictureObject);
+        //db.addPicture(boundService.getPictureObject());
+        boundService.addToDb();
 
         Intent intent = new Intent(getContext(), MainActivity.class);
         startActivity(intent);
         getActivity().finish();
-        //SQLite braucht nen restart vom Intent, da die Daten sonst nicht richtig gespeichert sind
+        //SQLite braucht einen restart vom Intent, da die Daten sonst nicht richtig gespeichert sind
 
+    }
+
+    private ServiceConnection mConnection = new ServiceConnection() {
+        public void onServiceConnected(ComponentName className, IBinder service) {
+            boundService = ((PhotoService.LocalBinder) service).getService();
+        }
+
+        public void onServiceDisconnected(ComponentName className) {
+            boundService = null;
+            isBound = false;
+        }
+    };
+
+    void doBindService() {
+        getActivity().bindService(new Intent(getActivity(), PhotoService.class), mConnection, Context.BIND_AUTO_CREATE);
+        getActivity().startService(new Intent(getActivity(), PhotoService.class));
+        isBound = true;
+    }
+
+    void doUnbindService() {
+        if (isBound) {
+            // Detach our existing connection.
+            getActivity().unbindService(mConnection);
+            isBound = false;
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        doUnbindService();
     }
 }

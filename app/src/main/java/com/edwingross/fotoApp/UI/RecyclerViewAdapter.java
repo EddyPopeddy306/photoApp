@@ -103,7 +103,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             deleteButton.setOnClickListener(this);
 
             itemView.setOnClickListener(view -> {
-                //TODO Design für Dark und Light
                 pictureObject = pictureObjectList.get(getAdapterPosition());
                 previewSaveButton.setVisibility(View.INVISIBLE);
                 previewNoPicText.setVisibility(View.INVISIBLE);

@@ -3,8 +3,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="5dp"
-    android:background="?attr/colorOnPrimary">
+    android:padding="2dp"
+    android:background="?attr/my_list_background">
 
     <androidx.cardview.widget.CardView
         android:id="@+id/cardViewPicture"
@@ -16,13 +16,13 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:padding="5dp"
-            android:background="#EEEEEE">
+            android:background="?attr/my_background">
 
             <TextView
                 android:id="@+id/namePicture"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/black"
+                android:textColor="?attr/my_text"
                 android:text="@string/picture_name"
                 android:textSize="20sp"
                 android:textStyle="bold" />
@@ -31,7 +31,7 @@
                 android:id="@+id/datePicture"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/black"
+                android:textColor="?attr/my_text"
                 android:text="@string/date_pic"
                 android:layout_below="@+id/namePicture" />
 
