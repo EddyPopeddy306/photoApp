@@ -3,14 +3,17 @@ package com.edwingross.fotoApp.Fragments;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.media.Image;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -56,6 +59,9 @@ import java.util.concurrent.Executor;
 
 public class PhotoFragment extends Fragment {
 
+    private PhotoService boundService;
+    private boolean isBound;
+
     private ListenableFuture<ProcessCameraProvider> cameraProviderFuture;
 
     PreviewView previewView;
@@ -74,8 +80,11 @@ public class PhotoFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        doBindService();
         return inflater.inflate(R.layout.photo_fragment_layout, container, false);
     }
+
+
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
@@ -109,6 +118,9 @@ public class PhotoFragment extends Fragment {
                                 Manifest.permission.CAMERA
                         }, 100);
             }else{
+                if(isBound){
+                    boundService.testService();
+                }
                 capturePhoto();
             }
         });
@@ -148,12 +160,14 @@ public class PhotoFragment extends Fragment {
                 new ImageCapture.OnImageCapturedCallback() {
                     @Override
                     public void onCaptureSuccess(@NonNull ImageProxy image) {
-                        pictureObject = new PictureObject();
+                        //pictureObject = new PictureObject();
+                        boundService.initPictureObject();
                         Toast.makeText(context, "Photo captured: " + image.toString(), Toast.LENGTH_SHORT).show();
                         super.onCaptureSuccess(image);
 
                         @SuppressLint("UnsafeOptInUsageError") Bitmap bitmap = convertToBitmap(image.getImage());
-                        pictureObject.setImage(bitmap);
+                        //pictureObject.setImage(bitmap);
+                        boundService.getPictureObject().setImage(bitmap);
 
                         saveButton.setVisibility(View.VISIBLE);
                         noPicText.setVisibility(View.GONE);
@@ -193,5 +207,38 @@ public class PhotoFragment extends Fragment {
 
         return rotatedBitmap;
     }
+
+    private ServiceConnection mConnection = new ServiceConnection() {
+        public void onServiceConnected(ComponentName className, IBinder service) {
+            boundService = ((PhotoService.LocalBinder) service).getService();
+        }
+
+        public void onServiceDisconnected(ComponentName className) {
+            boundService = null;
+            isBound = false;
+        }
+    };
+
+    void doBindService() {
+        getActivity().bindService(new Intent(getActivity(), PhotoService.class), mConnection, Context.BIND_AUTO_CREATE);
+        getActivity().startService(new Intent(getActivity(), PhotoService.class));
+        isBound = true;
+    }
+
+    void doUnbindService() {
+        if (isBound) {
+            // Detach our existing connection.
+            getActivity().unbindService(mConnection);
+            isBound = false;
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        doUnbindService();
+    }
+
+
 
 }

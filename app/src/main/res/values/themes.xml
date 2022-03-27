@@ -11,7 +11,10 @@
         <item name="colorOnSecondary">@color/black</item>
         <!-- Status bar color. -->
         <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
-        <!-- Customize your theme here. -->
+        <!-- Own theme. -->
+        <item name="my_background">@color/lightBackground</item>
+        <item name="my_list_background">@color/lightListBackground</item>
+        <item name="my_text">@color/lightText</item>
     </style>
 
     <style name="Theme.MyApplication.NoActionBar">

@@ -1,8 +1,12 @@
 package com.edwingross.fotoApp.Fragments;
 
 import android.app.AlertDialog;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -23,6 +27,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.edwingross.fotoApp.Database.DatabaseHandler;
 import com.edwingross.fotoApp.Model.PictureObject;
 import com.edwingross.fotoApp.R;
+import com.edwingross.fotoApp.Services.PhotoService;
 import com.edwingross.fotoApp.UI.RecyclerViewAdapter;
 
 import java.util.ArrayList;
@@ -31,6 +36,8 @@ import java.util.List;
 
 public class ListFragment extends Fragment {
 
+    private PhotoService boundService;
+    private boolean isBound;
 
     private List<PictureObject> pictureObjectList;
     private List<PictureObject> listItems;
@@ -44,6 +51,7 @@ public class ListFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        doBindService();
         return inflater.inflate(R.layout.list_fragment_layout, container, false);
     }
 
@@ -78,10 +86,38 @@ public class ListFragment extends Fragment {
         recyclerViewAdapter = new RecyclerViewAdapter(getContext(), listItems, getActivity());
         recyclerView.setAdapter(recyclerViewAdapter);
 
-        //TODO Vllt drag and drop implementieren ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleCallback)
-
         recyclerViewAdapter.notifyDataSetChanged();
     }
 
+    private ServiceConnection mConnection = new ServiceConnection() {
+        public void onServiceConnected(ComponentName className, IBinder service) {
+            boundService = ((PhotoService.LocalBinder) service).getService();
+        }
+
+        public void onServiceDisconnected(ComponentName className) {
+            boundService = null;
+            isBound = false;
+        }
+    };
+
+    void doBindService() {
+        getActivity().bindService(new Intent(getActivity(), PhotoService.class), mConnection, Context.BIND_AUTO_CREATE);
+        getActivity().startService(new Intent(getActivity(), PhotoService.class));
+        isBound = true;
+    }
+
+    void doUnbindService() {
+        if (isBound) {
+            // Detach our existing connection.
+            getActivity().unbindService(mConnection);
+            isBound = false;
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        doUnbindService();
+    }
 
 }

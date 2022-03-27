@@ -49,58 +49,33 @@ public class MainActivity extends AppCompatActivity {
         TabLayout tabs = binding.tabs;
         tabs.setupWithViewPager(viewPager);
 
+        doBindService();
+
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-            Button cameraButton = findViewById(R.id.bt_open);
-            cameraButton.setText("Foto aufnehmen");
+            //After permission is granted the Activity gets restarted in order to start the Camera
+            startActivity(new Intent(MainActivity.this, MainActivity.class));
         }
     }
 
     @Override
-    public void onStart() {
-        super.onStart();
-        //Bind to PhotoService
-        Intent intent = new Intent(this, PhotoService.class);
-        bindService(intent, connection, Context.BIND_AUTO_CREATE);
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        //Bind to PhotoService
-        Intent intent = new Intent(this, PhotoService.class);
-        bindService(intent, connection, Context.BIND_AUTO_CREATE);
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
+    public void onDestroy() {
+        super.onDestroy();
         //Unbind Service
-        unbindService(connection);
-        isBound = false;
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        //Unbind Service
-        unbindService(connection);
-        isBound = false;
+        doUnbindService();
     }
 
     /** Defines callbacks for service binding, passed to bindService() */
     private ServiceConnection connection = new ServiceConnection() {
 
         @Override
-        public void onServiceConnected(ComponentName className,
-                                       IBinder service) {
+        public void onServiceConnected(ComponentName className, IBinder service) {
             // We've bound to LocalService, cast the IBinder and get LocalService instance
-            PhotoService.LocalBinder binder = (PhotoService.LocalBinder) service;
-            photoService = binder.getService();
+            photoService = ((PhotoService.LocalBinder) service).getService();
             isBound = true;
         }
 
@@ -109,5 +84,20 @@ public class MainActivity extends AppCompatActivity {
             isBound = false;
         }
     };
+
+
+    void doBindService() {
+        Intent intent = new Intent(MainActivity.this, PhotoService.class);
+        bindService(intent, connection, BIND_AUTO_CREATE);
+    }
+
+    void doUnbindService() {
+        if (isBound) {
+            // Detach our existing connection.
+            unbindService(connection);
+            isBound = false;
+        }
+    }
+
 
 }
