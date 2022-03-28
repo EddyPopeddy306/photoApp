@@ -11,6 +11,7 @@ import androidx.annotation.Nullable;
 import com.edwingross.fotoApp.Database.DatabaseHandler;
 import com.edwingross.fotoApp.Model.PictureObject;
 
+import java.util.List;
 import java.util.Random;
 
 public class PhotoService extends Service {
@@ -49,6 +50,11 @@ public class PhotoService extends Service {
     public void addToDb(){
         db = new DatabaseHandler(this);
         db.addPicture(this.pictureObject);
+    }
+
+    public List<PictureObject> getAllPicturesFromDb(){
+        db = new DatabaseHandler(this);
+        return db.getAllPictures();
     }
 
     public void testService(){
