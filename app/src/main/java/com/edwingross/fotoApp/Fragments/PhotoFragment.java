@@ -2,7 +2,6 @@ package com.edwingross.fotoApp.Fragments;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -14,14 +13,10 @@ import android.graphics.Matrix;
 import android.media.Image;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.text.InputType;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -38,22 +33,17 @@ import androidx.camera.view.PreviewView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.LifecycleOwner;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.edwingross.fotoApp.Database.DatabaseHandler;
 import com.edwingross.fotoApp.Model.PictureObject;
 import com.edwingross.fotoApp.R;
 import com.edwingross.fotoApp.Services.PhotoService;
-import com.edwingross.fotoApp.UI.RecyclerViewAdapter;
 import com.edwingross.fotoApp.Util.Constants;
 import com.google.android.material.tabs.TabLayout;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 
@@ -63,12 +53,14 @@ public class PhotoFragment extends Fragment {
     private boolean isBound;
 
     private ListenableFuture<ProcessCameraProvider> cameraProviderFuture;
+    private boolean isFront;
 
     PreviewView previewView;
 
     private TextView noPicText;
 
     private Button cameraButton;
+    private Button rotateButton;
     private Button saveButton;
 
     private ImageCapture imageCapture;
@@ -91,13 +83,15 @@ public class PhotoFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         cameraButton = getView().findViewById(R.id.bt_open);
+        rotateButton = getView().findViewById(R.id.bt_rotate);
         previewView = getView().findViewById(R.id.previewView);
+        isFront = false;
 
         cameraProviderFuture = ProcessCameraProvider.getInstance(this.getContext());
         cameraProviderFuture.addListener(() -> {
             try {
                 ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
-                startCameraX(cameraProvider);
+                startCameraX(cameraProvider, CameraSelector.LENS_FACING_BACK);
             }catch (ExecutionException e){
                 e.printStackTrace();
             } catch (InterruptedException e){
@@ -105,9 +99,10 @@ public class PhotoFragment extends Fragment {
             }
         }, getExecutor());
 
-        //Wenn die Kamerafreigabe erlaubt ist, dann soll der Knopftext von "Kamera öffnen" auf "Foto aufnehmen" geändert werden
+        //Wenn die Kamerafreigabe erlaubt ist, dann soll der Knopftext von "Kamera öffnen" auf "Foto aufnehmen" geändert werden und der Rotationsknopf soll eingefügt werden
         if(ContextCompat.checkSelfPermission(getContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED){
             cameraButton.setText("Foto aufnehmen");
+            rotateButton.setVisibility(View.VISIBLE);
         }
 
         cameraButton.setOnClickListener(view1 -> {
@@ -125,6 +120,29 @@ public class PhotoFragment extends Fragment {
             }
         });
 
+        rotateButton.setOnClickListener(view1 -> {
+            isFront = !isFront;
+            if(isFront){
+                try{
+                    ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
+                    startCameraX(cameraProvider, CameraSelector.LENS_FACING_FRONT);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } catch (ExecutionException e) {
+                    e.printStackTrace();
+                }
+
+            }else{
+                try{
+                    ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
+                    startCameraX(cameraProvider, CameraSelector.LENS_FACING_BACK);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } catch (ExecutionException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
 
 
     }
@@ -133,11 +151,11 @@ public class PhotoFragment extends Fragment {
         return ContextCompat.getMainExecutor(this.getContext());
     }
 
-    private void startCameraX(ProcessCameraProvider cameraProvider){
+    private void startCameraX(ProcessCameraProvider cameraProvider, int facing){
         cameraProvider.unbindAll();
 
         CameraSelector cameraSelector = new CameraSelector.Builder()
-                .requireLensFacing(CameraSelector.LENS_FACING_BACK)
+                .requireLensFacing(facing)
                 .build();
 
         Preview preview = new Preview.Builder().build();
@@ -165,7 +183,7 @@ public class PhotoFragment extends Fragment {
                         Toast.makeText(context, "Photo captured: " + image.toString(), Toast.LENGTH_SHORT).show();
                         super.onCaptureSuccess(image);
 
-                        @SuppressLint("UnsafeOptInUsageError") Bitmap bitmap = convertToBitmap(image.getImage());
+                        @SuppressLint("UnsafeOptInUsageError") Bitmap bitmap = convertToBitmap(image.getImage(), isFront);
                         //pictureObject.setImage(bitmap);
                         boundService.getPictureObject().setImage(bitmap);
 
@@ -173,7 +191,7 @@ public class PhotoFragment extends Fragment {
                         noPicText.setVisibility(View.GONE);
 
                         //Geht direkt zur Vorschau
-                        TabLayout tabHost = (TabLayout) getActivity().findViewById(R.id.tabs) ;
+                        TabLayout tabHost = (TabLayout) getActivity().findViewById(R.id.tabs);
                         tabHost.getTabAt(Constants.PHOTO_VIEW_TAB).select();
 
                         image.close();
@@ -188,15 +206,17 @@ public class PhotoFragment extends Fragment {
         );
     }
 
-    private Bitmap convertToBitmap(Image image){
+    private Bitmap convertToBitmap(Image image, boolean isFront){
 
         ByteBuffer buffer = image.getPlanes()[0].getBuffer();
         byte[] bytes = new byte[buffer.capacity()];
         buffer.get(bytes);
 
         Matrix matrix = new Matrix();
-
         matrix.postRotate(90);
+        if(isFront){//If the camera faces front you have to prescale the image to not be mirrored
+            matrix.preScale(-1.0f, 1.0f);
+        }
 
         Bitmap scaledBitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length, null);
 

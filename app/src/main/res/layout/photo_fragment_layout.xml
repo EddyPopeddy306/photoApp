@@ -15,22 +15,29 @@
         android:layout_weight="1"
         android:id="@+id/previewView"/>
 
-
-        <Button
-            android:id="@+id/bt_open"
+        <RelativeLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:text="@string/open_cam" />
+            android:orientation="horizontal">
 
-        <!--<Button
-            android:id="@+id/btSave"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:layout_alignParentRight="true"
-            android:text="@string/save_image"
-            android:visibility="invisible"
-            />-->
+            <Button
+                android:id="@+id/bt_open"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:layout_centerHorizontal="true"
+                android:text="@string/open_cam" />
+
+            <Button
+                android:id="@+id/bt_rotate"
+                android:layout_width="50dp"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_marginTop="10dp"
+                android:background="@android:drawable/ic_popup_sync"
+                android:visibility="invisible"/>
+
+        </RelativeLayout>
+
 
 </LinearLayout>

@@ -42,8 +42,6 @@ public class ListFragment extends Fragment {
     private List<PictureObject> pictureObjectList;
     private List<PictureObject> listItems;
 
-    private DatabaseHandler db;
-
     private RecyclerView recyclerView;
     private RecyclerViewAdapter recyclerViewAdapter;
 
@@ -63,35 +61,34 @@ public class ListFragment extends Fragment {
         pictureObjectList = new ArrayList<>();
         listItems = new ArrayList<>();
 
-        db = new DatabaseHandler(getContext());
         recyclerView = view.findViewById(R.id.recyclerViewIDPicture);
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
         pictureObjectList = new ArrayList<>();
         listItems = new ArrayList<>();
-
-        pictureObjectList = db.getAllPictures();
-        for(PictureObject p : pictureObjectList){
-            Log.d("Test", "Name: " + p.getName() + " Pic: " + p.getImage().toString());
-            PictureObject pictureObject = new PictureObject();
-            pictureObject.setId(p.getId());
-            pictureObject.setName(p.getName());
-            pictureObject.setImage(p.getImage());
-            pictureObject.setDateAdded("Aufgenommen am: " + p.getDateAdded());
-
-            listItems.add(pictureObject);
-        }
-
-        recyclerViewAdapter = new RecyclerViewAdapter(getContext(), listItems, getActivity());
-        recyclerView.setAdapter(recyclerViewAdapter);
-
-        recyclerViewAdapter.notifyDataSetChanged();
     }
 
     private ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
             boundService = ((PhotoService.LocalBinder) service).getService();
+
+            pictureObjectList = boundService.getAllPicturesFromDb();
+            for(PictureObject p : pictureObjectList){
+                Log.d("Test", "Name: " + p.getName() + " Pic: " + p.getImage().toString());
+                PictureObject pictureObject = new PictureObject();
+                pictureObject.setId(p.getId());
+                pictureObject.setName(p.getName());
+                pictureObject.setImage(p.getImage());
+                pictureObject.setDateAdded("Aufgenommen am: " + p.getDateAdded());
+
+                listItems.add(pictureObject);
+            }
+
+            recyclerViewAdapter = new RecyclerViewAdapter(getContext(), listItems, getActivity());
+            recyclerView.setAdapter(recyclerViewAdapter);
+
+            recyclerViewAdapter.notifyDataSetChanged();
         }
 
         public void onServiceDisconnected(ComponentName className) {
