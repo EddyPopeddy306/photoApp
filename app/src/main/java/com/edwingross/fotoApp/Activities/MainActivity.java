@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
         TabLayout tabs = binding.tabs;
         tabs.setupWithViewPager(viewPager);
 
-        doBindService();
+        bindService();
 
     }
 
@@ -66,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
     public void onDestroy() {
         super.onDestroy();
         //Unbind Service
-        doUnbindService();
+        unbindService();
     }
 
     /** Defines callbacks for service binding, passed to bindService() */
@@ -86,12 +86,12 @@ public class MainActivity extends AppCompatActivity {
     };
 
 
-    void doBindService() {
+    void bindService() {
         Intent intent = new Intent(MainActivity.this, PhotoService.class);
         bindService(intent, connection, BIND_AUTO_CREATE);
     }
 
-    void doUnbindService() {
+    void unbindService() {
         if (isBound) {
             // Detach our existing connection.
             unbindService(connection);

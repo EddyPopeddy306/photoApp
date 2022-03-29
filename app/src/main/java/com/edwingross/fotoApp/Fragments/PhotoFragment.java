@@ -72,7 +72,7 @@ public class PhotoFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        doBindService();
+        bindService();
         return inflater.inflate(R.layout.photo_fragment_layout, container, false);
     }
 
@@ -178,13 +178,11 @@ public class PhotoFragment extends Fragment {
                 new ImageCapture.OnImageCapturedCallback() {
                     @Override
                     public void onCaptureSuccess(@NonNull ImageProxy image) {
-                        //pictureObject = new PictureObject();
                         boundService.initPictureObject();
                         Toast.makeText(context, "Photo captured: " + image.toString(), Toast.LENGTH_SHORT).show();
                         super.onCaptureSuccess(image);
 
                         @SuppressLint("UnsafeOptInUsageError") Bitmap bitmap = convertToBitmap(image.getImage(), isFront);
-                        //pictureObject.setImage(bitmap);
                         boundService.getPictureObject().setImage(bitmap);
 
                         saveButton.setVisibility(View.VISIBLE);
@@ -206,7 +204,7 @@ public class PhotoFragment extends Fragment {
         );
     }
 
-    private Bitmap convertToBitmap(Image image, boolean isFront){
+    public Bitmap convertToBitmap(Image image, boolean isFront){
 
         ByteBuffer buffer = image.getPlanes()[0].getBuffer();
         byte[] bytes = new byte[buffer.capacity()];
@@ -239,13 +237,12 @@ public class PhotoFragment extends Fragment {
         }
     };
 
-    void doBindService() {
+    void bindService() {
         getActivity().bindService(new Intent(getActivity(), PhotoService.class), mConnection, Context.BIND_AUTO_CREATE);
-        getActivity().startService(new Intent(getActivity(), PhotoService.class));
         isBound = true;
     }
 
-    void doUnbindService() {
+    void unbindService() {
         if (isBound) {
             // Detach our existing connection.
             getActivity().unbindService(mConnection);
@@ -256,7 +253,7 @@ public class PhotoFragment extends Fragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        doUnbindService();
+        unbindService();
     }
 
 

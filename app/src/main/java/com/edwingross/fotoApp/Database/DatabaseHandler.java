@@ -92,7 +92,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return cursor.getCount();
     }
 
-    public void addPicture(PictureObject picture){
+    public long addPicture(PictureObject picture){
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
 
@@ -106,8 +106,9 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         values.put(Constants.KEY_PICTURE_IMAGE, imageInBytes);
         values.put(Constants.KEY_PICTURE_DATE, java.lang.System.currentTimeMillis());
 
-        db.insert(Constants.TABLE_NAME, null, values);
+        long result = db.insert(Constants.TABLE_NAME, null, values);
         Log.d("Added", "Saved to DB: " + values);
+        return result;
     }
 
     public void updatePicture(PictureObject picture){

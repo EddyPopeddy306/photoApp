@@ -52,7 +52,7 @@ public class ImageViewFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        doBindService();
+        bindService();
         return inflater.inflate(R.layout.image_view_fragment_layout, container, false);
     }
 
@@ -121,13 +121,12 @@ public class ImageViewFragment extends Fragment {
         }
     };
 
-    void doBindService() {
+    void bindService() {
         getActivity().bindService(new Intent(getActivity(), PhotoService.class), mConnection, Context.BIND_AUTO_CREATE);
-        getActivity().startService(new Intent(getActivity(), PhotoService.class));
         isBound = true;
     }
 
-    void doUnbindService() {
+    void unbindService() {
         if (isBound) {
             // Detach our existing connection.
             getActivity().unbindService(mConnection);
@@ -138,6 +137,6 @@ public class ImageViewFragment extends Fragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        doUnbindService();
+        unbindService();
     }
 }
